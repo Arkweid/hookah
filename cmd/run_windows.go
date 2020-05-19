@@ -64,6 +64,7 @@ const (
 	pipedConfigKey       string      = "piped"
 	excludeTagsConfigKey string      = "exclude_tags"
 	execMode             os.FileMode = 0751
+	stageFixedConfigKey  string      = "stage_fixed"
 )
 
 // runCmd represents the run command
@@ -245,18 +246,23 @@ func executeCommand(hooksGroup, commandName string, wg *sync.WaitGroup) {
 
 	log.Println(au.Cyan("\n  EXECUTE >"), au.Bold(commandName))
 	if err != nil {
-		failList = append(failList, commandName)
-		setPipeBroken()
-		log.Println(err)
+		processError(commandName, err)
 		return
 	}
-
+	fileNames, err := command.Output()
+	if err != nil {
+		processError(commandName, err)
+		return
+	}
 	// io.Copy(os.Stdout, ptyOut) // win specific
 	if command.Wait() == nil {
 		okList = append(okList, commandName)
+		context.ExecGitCommand(fmt.Sprintf("git add %v", strings.Replace(string(fileNames), "\r\n", " ", -1)))
+
 	} else {
 		failList = append(failList, commandName)
 		setPipeBroken()
+
 	}
 }
 
@@ -382,6 +388,11 @@ func printSummary(execTime time.Duration) {
 func isScriptExist(hooksGroup, executableName string) bool {
 	key := strings.Join([]string{hooksGroup, scriptsConfigKey, executableName}, ".")
 	return viper.IsSet(key)
+}
+
+func isStageFixedFiles(hooksGroup, executableName string) bool {
+	key := strings.Join([]string{hooksGroup, commandsConfigKey, executableName, stageFixedConfigKey}, ".")
+	return viper.GetBool(key)
 }
 
 func isSkipScript(hooksGroup, executableName string) bool {
@@ -575,4 +586,10 @@ func makeExecutable(path string) {
 	if err := os.Chmod(path, execMode); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func processError(commandName string, err error) {
+	failList = append(failList, commandName)
+	setPipeBroken()
+	log.Println(err)
 }

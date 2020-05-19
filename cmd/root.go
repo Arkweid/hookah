@@ -27,11 +27,11 @@ const (
 )
 
 var (
-	Verbose      bool
-	NoColors     bool
-	rootPath     string
-	cfgFile      string
-	originConfig *viper.Viper
+	Verbose              bool
+	NoColors             bool
+	rootPath             string
+	cfgFile              string
+	originConfig         *viper.Viper
 	configFileExtensions = []string{".yml", ".yaml"}
 
 	au aurora.Aurora

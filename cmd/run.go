@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -63,6 +64,7 @@ const (
 	pipedConfigKey       string      = "piped"
 	excludeTagsConfigKey string      = "exclude_tags"
 	minVersionConfigKey  string      = "min_version"
+	stageFixedConfigKey  string      = "stage_fixed"
 	execMode             os.FileMode = 0751
 )
 
@@ -247,9 +249,7 @@ func executeCommand(hooksGroup, commandName string, wg *sync.WaitGroup) {
 
 	log.Println(au.Cyan("\n  EXECUTE >"), au.Bold(commandName))
 	if err != nil {
-		failList = append(failList, commandName)
-		setPipeBroken()
-		log.Println(err)
+		processError(commandName, err)
 		return
 	}
 
@@ -257,11 +257,29 @@ func executeCommand(hooksGroup, commandName string, wg *sync.WaitGroup) {
 	defer func() { ptyOut.Close() }() // Make sure to close the pty at the end.
 	// Copy stdin to the pty and the pty to stdout.
 	go func() { io.Copy(ptyOut, os.Stdin) }()
-	io.Copy(os.Stdout, ptyOut)
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	_, err = io.Copy(os.Stdout, ptyOut)
+	if err != nil {
+		processError(commandName, err)
+		return
+	}
+
+	w.Close()
+	fileNames, _ := ioutil.ReadAll(r)
+	os.Stdout = rescueStdout
+	log.Println(string(fileNames))
 	// pty part end
 
 	if command.Wait() == nil {
 		okList = append(okList, commandName)
+		if isStageFixedFiles(hooksGroup, commandName) {
+			log.Println("\n", au.Bold(commandName), au.Brown("(STAGE FIXED FILES)"))
+			log.Println(fmt.Sprintf("%#v", string(fileNames)))
+			context.ExecGitCommand(fmt.Sprintf("git add %v", strings.Replace(string(fileNames), "\r\n", " ", -1)))
+		}
 	} else {
 		failList = append(failList, commandName)
 		setPipeBroken()
@@ -402,6 +420,11 @@ func isSkipScript(hooksGroup, executableName string) bool {
 
 func isSkipCommmand(hooksGroup, executableName string) bool {
 	key := strings.Join([]string{hooksGroup, commandsConfigKey, executableName, skipConfigKey}, ".")
+	return viper.GetBool(key)
+}
+
+func isStageFixedFiles(hooksGroup, executableName string) bool {
+	key := strings.Join([]string{hooksGroup, commandsConfigKey, executableName, stageFixedConfigKey}, ".")
 	return viper.GetBool(key)
 }
 
@@ -612,4 +635,10 @@ func isVersionOk() bool {
 	}
 
 	return true
+}
+
+func processError(commandName string, err error) {
+	failList = append(failList, commandName)
+	setPipeBroken()
+	log.Println(err)
 }

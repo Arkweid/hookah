@@ -89,15 +89,18 @@ func AddConfigYaml(fs afero.Fs) {
 #   commands:
 #     eslint:
 #       glob: "*.{js,ts}"
+#       stage_fixed: true
 #       run: yarn eslint {staged_files}
 #     rubocop:
 #       tags: backend style
 #       glob: "*.rb"
 #       exclude: "application.rb|routes.rb"
+#       stage_fixed: false
 #       run: bundle exec rubocop --force-exclusion {all_files}
 #     govet:
 #       tags: backend style
 #       files: git ls-files -m
+#       stage_fixed: true
 #       glob: "*.go"
 #       run: go vet {files}
 #   scripts:
