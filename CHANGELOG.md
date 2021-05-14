@@ -2,6 +2,10 @@
 
 ## master (unreleased)
 
+- [PR](https://github.com/evilmartians/lefthook/pull/185) Add `.lefthookrc` to fix incorrect PATH @skryukov
+- [PR](https://github.com/evilmartians/lefthook/pull/182) Support git workspaces and submodules @skryukov
+
+
 # 0.7.4 (2021-04-30)
 
 - [PR](https://github.com/evilmartians/lefthook/pull/171) Improve check for installed git @DmitryTsepelev

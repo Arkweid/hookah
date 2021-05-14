@@ -8,6 +8,10 @@ if [ -t 1 ] ; then
   exec < /dev/tty ; # <- enables interactive shell
 fi
 
+if [ -f ~/.lefthookrc ]; then
+  source ~/.lefthookrc
+fi
+
 dir="$(cd "$(dirname "$(dirname "$(dirname "$0")")")" >/dev/null 2>&1 || exit ; pwd -P)"
 
 call_lefthook()
