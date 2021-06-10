@@ -251,6 +251,28 @@ commit-msg:
 
 When you try to commit `git commit -m "haha bad commit text"` script `template_checker` will be executed. Since commit text doesn't match the described pattern the commit process will be interrupted.
 
+## Bash script example with Commitlint
+
+Let's create a bash script to check conventional commit status `.lefthook/commit-msg/commitlint.sh`:
+
+```bash
+echo $(head -n1 $1) | npx commitlint --color
+```
+
+Now we can ask lefthook to run our bash script by adding this code to
+`lefthook.yml` file:
+
+```yml
+# lefthook.yml
+
+commit-msg:
+  scripts:
+    "commitlint.sh":
+      runner: bash
+```
+
+When you try to commit `git commit -m "haha bad commit text"` script `commitlint.sh` will be executed. Since commit text doesn't match the default config or custom config that you setup for `commitlint`, the process will be interrupted.
+
 ## Local config
 
 We can use `lefthook-local.yml` as local config. Options in this file will overwrite options in `lefthook.yml`. (Don't forget to add this file to `.gitignore`)
