@@ -22,6 +22,16 @@ archives:
       darwin: MacOS
       linux: Linux
       amd64: x86_64
+  - id: lefthook-gz
+    format: gz
+    files:
+    - none*
+    replacements:
+      windows: Windows
+      darwin: MacOS
+      linux: Linux
+      386: i386
+      amd64: x86_64
 checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'
 snapshot:
