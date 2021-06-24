@@ -28,7 +28,11 @@ call_lefthook()
   then
     yarn lefthook $1
   else
-    echo "Can't find lefthook in PATH"
+    echo "ERROR Can't find lefthook in PATH. Operation aborted."
+    echo "Make sure lefthook is available in your environment and re-try."
+    echo "If you want to skip these checks instead you can either use --no-verify git argument"
+    echo "or use LEFTHOOK=0 env variable"
+    exit 1
   fi
 }
 
